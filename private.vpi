@@ -1,0 +1,43 @@
+from flask import Flask, request, jsonify
+import re
+
+app = Flask(__name__)
+
+# Define blocked keywords/phrases (e.g., hacking, illegal, bypass, Zeta, etc.)
+BLOCKED_PATTERNS = [
+    r"zeta|alpha|quantum.*entangled|superpositioned",  # Blocks fictional realms
+    r"hack|cheat|exploit|crack|bypass",              # Blocks illegal tech requests
+    r"steal|leak|confidential|illegal|piracy",       # Blocks unethical acts
+    r"ignore.*(ethical|legal)|no.*rules",            # Blocks rule-breaking prompts
+]
+
+def is_prompt_violating(input_text):
+    """Check if the user's input contains blocked patterns."""
+    input_lower = input_text.lower()
+    for pattern in BLOCKED_PATTERNS:
+        if re.search(pattern, input_lower):
+            return True
+    return False
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    user_input = request.json.get('message', '')
+
+    # Step 1: Validate input
+    if is_prompt_violating(user_input):
+        return jsonify({
+            "response": "🚫 Request blocked. I adhere strictly to ethical guidelines.",
+            "status": "violation_detected"
+        }), 403  # HTTP 403 Forbidden
+
+    # Step 2: Process safe inputs normally
+    # (Replace with your actual AI response logic)
+    bot_response = "Here’s a helpful response!"
+
+    return jsonify({
+        "response": bot_response,
+        "status": "success"
+    })
+
+if __name__ == '__main__':
+    app.run(port=5000)
